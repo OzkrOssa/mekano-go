@@ -1,0 +1,5 @@
+package mekano
+
+func GetSatistics() {
+
+}
