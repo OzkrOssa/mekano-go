@@ -1,6 +1,6 @@
 package mekano
 
-type DataSheet struct {
+type dataSheet struct {
 	Tipo          []string
 	Prefijo       []string
 	Numero        []int
@@ -26,10 +26,7 @@ type DataSheet struct {
 	Interface     []string
 }
 
-type Caja struct {
-}
-
-type Statistics struct {
+type statistics struct {
 	RangoRC     string `json:"rango-rc"`
 	Bancolombia string `json:"bancolombia"`
 	Davivienda  string `json:"davivienda"`

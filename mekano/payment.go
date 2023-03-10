@@ -1,18 +1,27 @@
 package mekano
 
 import (
+	"encoding/csv"
 	"fmt"
+	"os"
 	"path/filepath"
+	"strconv"
 	"time"
 
+	"github.com/OzkrOssa/mekano-go/database"
+	"github.com/OzkrOssa/mekano-go/utils"
 	"github.com/xuri/excelize/v2"
+	"gorm.io/gorm"
 )
 
-func Payment(fileName string) {
-	currentTime := time.Now().Format("02/01/2006 15:04")
-	dirPath := "C:/Users/devre/OneDrive/pagos_mekano/"
+func Payment(fileName string, db *gorm.DB) {
 
-	dataSheet := DataSheet{}
+	currentTimeInterface := time.Now().Format("02/01/2006 15:04")
+	currentTimeMySQL := time.Now().Format("2006-01-02")
+	dirPath := "C:/Users/devre/OneDrive/pagos_mekano/"
+	rowCount := 0
+	var lastConsecutive int = 0
+	dataSheet := dataSheet{}
 
 	xlsx, err := excelize.OpenFile(filepath.Join(dirPath, fileName+".xlsx"))
 	if err != nil {
@@ -25,16 +34,15 @@ func Payment(fileName string) {
 		fmt.Println(err)
 	}
 
-	rowCount := 0
-	//TODO: query to db
-	currentConsecutive := 1
+	var currentConsecutive database.MekanoPayments
+	db.Table("mekanopayments").Order("consecutive DESC").Limit(1).First(&currentConsecutive)
 
 	for _, row := range excelRows[1:] {
 		rowCount++
 
 		dataSheet.Tipo = append(dataSheet.Tipo, "RC")
 		dataSheet.Prefijo = append(dataSheet.Prefijo, "_")
-		dataSheet.Numero = append(dataSheet.Numero, currentConsecutive+rowCount)
+		dataSheet.Numero = append(dataSheet.Numero, currentConsecutive.Consecutive+rowCount) //
 		dataSheet.Secuencia = append(dataSheet.Secuencia, "")
 		dataSheet.Fecha = append(dataSheet.Fecha, row[4])
 		dataSheet.Cuenta = append(dataSheet.Cuenta, "13050501")
@@ -54,14 +62,14 @@ func Payment(fileName string) {
 		dataSheet.CuentaPagar = append(dataSheet.CuentaPagar, "")
 		dataSheet.NombreTercero = append(dataSheet.NombreTercero, row[2])
 		dataSheet.NombreCentro = append(dataSheet.NombreCentro, "CENTRO DE COSTOS GENERAL")
-		dataSheet.Interface = append(dataSheet.Interface, currentTime)
+		dataSheet.Interface = append(dataSheet.Interface, currentTimeInterface)
 
 		dataSheet.Tipo = append(dataSheet.Tipo, "RC")
 		dataSheet.Prefijo = append(dataSheet.Prefijo, "_")
-		dataSheet.Numero = append(dataSheet.Numero, currentConsecutive+rowCount)
+		dataSheet.Numero = append(dataSheet.Numero, currentConsecutive.Consecutive+rowCount)
 		dataSheet.Secuencia = append(dataSheet.Secuencia, "")
 		dataSheet.Fecha = append(dataSheet.Fecha, row[4])
-		dataSheet.Cuenta = append(dataSheet.Cuenta, "") //FIXME: add ledger account
+		dataSheet.Cuenta = append(dataSheet.Cuenta, utils.Caja[row[9]])
 		dataSheet.Terceros = append(dataSheet.Terceros, row[1])
 		dataSheet.CentroCostos = append(dataSheet.CentroCostos, "C1")
 		dataSheet.Nota = append(dataSheet.Nota, "RECAUDO POR VENTA SERVICIOS")
@@ -78,9 +86,50 @@ func Payment(fileName string) {
 		dataSheet.CuentaPagar = append(dataSheet.CuentaPagar, "")
 		dataSheet.NombreTercero = append(dataSheet.NombreTercero, row[2])
 		dataSheet.NombreCentro = append(dataSheet.NombreCentro, "CENTRO DE COSTOS GENERAL")
-		dataSheet.Interface = append(dataSheet.Interface, currentTime)
+		dataSheet.Interface = append(dataSheet.Interface, currentTimeInterface)
+
+		lastConsecutive = currentConsecutive.Consecutive + rowCount
 	}
 
-	//TODO: Send last consecutive to database
-	fmt.Println(rowCount)
+	db.Create(&database.MekanoPayments{Consecutive: lastConsecutive, CreateAt: currentTimeMySQL})
+
+	txtFile, err := os.Create("C:/APOLOSOFT/MEKANO_REMOTO/INTERFACES/CONTABLE.txt")
+	if err != nil {
+		fmt.Println(err)
+		return
+	}
+	defer txtFile.Close()
+
+	writer := csv.NewWriter(txtFile)
+	writer.Comma = ','
+
+	for i := range dataSheet.Tipo {
+		row := []string{
+			dataSheet.Tipo[i],
+			dataSheet.Prefijo[i],
+			strconv.Itoa(dataSheet.Numero[i]),
+			dataSheet.Secuencia[i],
+			dataSheet.Fecha[i],
+			dataSheet.Cuenta[i],
+			dataSheet.Terceros[i],
+			dataSheet.CentroCostos[i],
+			dataSheet.Nota[i],
+			dataSheet.Debito[i],
+			dataSheet.Credito[i],
+			dataSheet.Base[i],
+			dataSheet.Aplica[i],
+			dataSheet.TipoAnexo[i],
+			dataSheet.PrefijoAnexo[i],
+			dataSheet.NumeroAnexo[i],
+			dataSheet.Usuario[i],
+			dataSheet.Signo[i],
+			dataSheet.CuentaCobrar[i],
+			dataSheet.CuentaPagar[i],
+			dataSheet.NombreTercero[i],
+			dataSheet.NombreCentro[i],
+			dataSheet.Interface[i],
+		}
+		writer.Write(row)
+	}
+	writer.Flush()
 }
