@@ -6,7 +6,6 @@ import (
 	"os"
 	"path/filepath"
 	"strconv"
-	"time"
 
 	"github.com/OzkrOssa/mekano-go/database"
 	"github.com/OzkrOssa/mekano-go/utils"
@@ -15,15 +14,10 @@ import (
 )
 
 func Payment(fileName string, db *gorm.DB) {
+	var rowCount, lastConsecutive int = 0, 0
+	paymentDatasheet := dataSheet{}
 
-	currentTimeInterface := time.Now().Format("02/01/2006 15:04")
-	currentTimeMySQL := time.Now().Format("2006-01-02")
-	dirPath := "C:/Users/devre/OneDrive/pagos_mekano/"
-	rowCount := 0
-	var lastConsecutive int = 0
-	dataSheet := dataSheet{}
-
-	xlsx, err := excelize.OpenFile(filepath.Join(dirPath, fileName+".xlsx"))
+	xlsx, err := excelize.OpenFile(filepath.Join(utils.LocalCloudDirPath, fileName+".xlsx"))
 	if err != nil {
 		fmt.Println(err)
 		return
@@ -40,60 +34,60 @@ func Payment(fileName string, db *gorm.DB) {
 	for _, row := range excelRows[1:] {
 		rowCount++
 
-		dataSheet.Tipo = append(dataSheet.Tipo, "RC")
-		dataSheet.Prefijo = append(dataSheet.Prefijo, "_")
-		dataSheet.Numero = append(dataSheet.Numero, currentConsecutive.Consecutive+rowCount) //
-		dataSheet.Secuencia = append(dataSheet.Secuencia, "")
-		dataSheet.Fecha = append(dataSheet.Fecha, row[4])
-		dataSheet.Cuenta = append(dataSheet.Cuenta, "13050501")
-		dataSheet.Terceros = append(dataSheet.Terceros, row[1])
-		dataSheet.CentroCostos = append(dataSheet.CentroCostos, "C1")
-		dataSheet.Nota = append(dataSheet.Nota, "RECAUDO POR VENTA SERVICIOS")
-		dataSheet.Debito = append(dataSheet.Debito, "0")
-		dataSheet.Credito = append(dataSheet.Credito, row[5])
-		dataSheet.Base = append(dataSheet.Base, "0")
-		dataSheet.Aplica = append(dataSheet.Aplica, "")
-		dataSheet.TipoAnexo = append(dataSheet.TipoAnexo, "")
-		dataSheet.PrefijoAnexo = append(dataSheet.PrefijoAnexo, "")
-		dataSheet.NumeroAnexo = append(dataSheet.NumeroAnexo, "")
-		dataSheet.Usuario = append(dataSheet.Usuario, "SUPERVISOR")
-		dataSheet.Signo = append(dataSheet.Signo, "")
-		dataSheet.CuentaCobrar = append(dataSheet.CuentaCobrar, "")
-		dataSheet.CuentaPagar = append(dataSheet.CuentaPagar, "")
-		dataSheet.NombreTercero = append(dataSheet.NombreTercero, row[2])
-		dataSheet.NombreCentro = append(dataSheet.NombreCentro, "CENTRO DE COSTOS GENERAL")
-		dataSheet.Interface = append(dataSheet.Interface, currentTimeInterface)
+		paymentDatasheet.Tipo = append(paymentDatasheet.Tipo, "RC")
+		paymentDatasheet.Prefijo = append(paymentDatasheet.Prefijo, "_")
+		paymentDatasheet.Numero = append(paymentDatasheet.Numero, currentConsecutive.Consecutive+rowCount) //
+		paymentDatasheet.Secuencia = append(paymentDatasheet.Secuencia, "")
+		paymentDatasheet.Fecha = append(paymentDatasheet.Fecha, row[4])
+		paymentDatasheet.Cuenta = append(paymentDatasheet.Cuenta, "13050501")
+		paymentDatasheet.Terceros = append(paymentDatasheet.Terceros, row[1])
+		paymentDatasheet.CentroCostos = append(paymentDatasheet.CentroCostos, "C1")
+		paymentDatasheet.Nota = append(paymentDatasheet.Nota, "RECAUDO POR VENTA SERVICIOS")
+		paymentDatasheet.Debito = append(paymentDatasheet.Debito, "0")
+		paymentDatasheet.Credito = append(paymentDatasheet.Credito, row[5])
+		paymentDatasheet.Base = append(paymentDatasheet.Base, "0")
+		paymentDatasheet.Aplica = append(paymentDatasheet.Aplica, "")
+		paymentDatasheet.TipoAnexo = append(paymentDatasheet.TipoAnexo, "")
+		paymentDatasheet.PrefijoAnexo = append(paymentDatasheet.PrefijoAnexo, "")
+		paymentDatasheet.NumeroAnexo = append(paymentDatasheet.NumeroAnexo, "")
+		paymentDatasheet.Usuario = append(paymentDatasheet.Usuario, "SUPERVISOR")
+		paymentDatasheet.Signo = append(paymentDatasheet.Signo, "")
+		paymentDatasheet.CuentaCobrar = append(paymentDatasheet.CuentaCobrar, "")
+		paymentDatasheet.CuentaPagar = append(paymentDatasheet.CuentaPagar, "")
+		paymentDatasheet.NombreTercero = append(paymentDatasheet.NombreTercero, row[2])
+		paymentDatasheet.NombreCentro = append(paymentDatasheet.NombreCentro, "CENTRO DE COSTOS GENERAL")
+		paymentDatasheet.Interface = append(paymentDatasheet.Interface, utils.CurrentTimeMekanoInterface)
 
-		dataSheet.Tipo = append(dataSheet.Tipo, "RC")
-		dataSheet.Prefijo = append(dataSheet.Prefijo, "_")
-		dataSheet.Numero = append(dataSheet.Numero, currentConsecutive.Consecutive+rowCount)
-		dataSheet.Secuencia = append(dataSheet.Secuencia, "")
-		dataSheet.Fecha = append(dataSheet.Fecha, row[4])
-		dataSheet.Cuenta = append(dataSheet.Cuenta, utils.Caja[row[9]])
-		dataSheet.Terceros = append(dataSheet.Terceros, row[1])
-		dataSheet.CentroCostos = append(dataSheet.CentroCostos, "C1")
-		dataSheet.Nota = append(dataSheet.Nota, "RECAUDO POR VENTA SERVICIOS")
-		dataSheet.Debito = append(dataSheet.Debito, row[5])
-		dataSheet.Credito = append(dataSheet.Credito, "0")
-		dataSheet.Base = append(dataSheet.Base, "0")
-		dataSheet.Aplica = append(dataSheet.Aplica, "")
-		dataSheet.TipoAnexo = append(dataSheet.TipoAnexo, "")
-		dataSheet.PrefijoAnexo = append(dataSheet.PrefijoAnexo, "")
-		dataSheet.NumeroAnexo = append(dataSheet.NumeroAnexo, "")
-		dataSheet.Usuario = append(dataSheet.Usuario, "SUPERVISOR")
-		dataSheet.Signo = append(dataSheet.Signo, "")
-		dataSheet.CuentaCobrar = append(dataSheet.CuentaCobrar, "")
-		dataSheet.CuentaPagar = append(dataSheet.CuentaPagar, "")
-		dataSheet.NombreTercero = append(dataSheet.NombreTercero, row[2])
-		dataSheet.NombreCentro = append(dataSheet.NombreCentro, "CENTRO DE COSTOS GENERAL")
-		dataSheet.Interface = append(dataSheet.Interface, currentTimeInterface)
+		paymentDatasheet.Tipo = append(paymentDatasheet.Tipo, "RC")
+		paymentDatasheet.Prefijo = append(paymentDatasheet.Prefijo, "_")
+		paymentDatasheet.Numero = append(paymentDatasheet.Numero, currentConsecutive.Consecutive+rowCount)
+		paymentDatasheet.Secuencia = append(paymentDatasheet.Secuencia, "")
+		paymentDatasheet.Fecha = append(paymentDatasheet.Fecha, row[4])
+		paymentDatasheet.Cuenta = append(paymentDatasheet.Cuenta, utils.Caja[row[9]])
+		paymentDatasheet.Terceros = append(paymentDatasheet.Terceros, row[1])
+		paymentDatasheet.CentroCostos = append(paymentDatasheet.CentroCostos, "C1")
+		paymentDatasheet.Nota = append(paymentDatasheet.Nota, "RECAUDO POR VENTA SERVICIOS")
+		paymentDatasheet.Debito = append(paymentDatasheet.Debito, row[5])
+		paymentDatasheet.Credito = append(paymentDatasheet.Credito, "0")
+		paymentDatasheet.Base = append(paymentDatasheet.Base, "0")
+		paymentDatasheet.Aplica = append(paymentDatasheet.Aplica, "")
+		paymentDatasheet.TipoAnexo = append(paymentDatasheet.TipoAnexo, "")
+		paymentDatasheet.PrefijoAnexo = append(paymentDatasheet.PrefijoAnexo, "")
+		paymentDatasheet.NumeroAnexo = append(paymentDatasheet.NumeroAnexo, "")
+		paymentDatasheet.Usuario = append(paymentDatasheet.Usuario, "SUPERVISOR")
+		paymentDatasheet.Signo = append(paymentDatasheet.Signo, "")
+		paymentDatasheet.CuentaCobrar = append(paymentDatasheet.CuentaCobrar, "")
+		paymentDatasheet.CuentaPagar = append(paymentDatasheet.CuentaPagar, "")
+		paymentDatasheet.NombreTercero = append(paymentDatasheet.NombreTercero, row[2])
+		paymentDatasheet.NombreCentro = append(paymentDatasheet.NombreCentro, "CENTRO DE COSTOS GENERAL")
+		paymentDatasheet.Interface = append(paymentDatasheet.Interface, utils.CurrentTimeMekanoInterface)
 
 		lastConsecutive = currentConsecutive.Consecutive + rowCount
 	}
 
-	db.Create(&database.MekanoPayments{Consecutive: lastConsecutive, CreateAt: currentTimeMySQL})
+	db.Create(&database.MekanoPayments{Consecutive: lastConsecutive, CreateAt: utils.CurrentTimeToMySQL})
 
-	txtFile, err := os.Create("C:/APOLOSOFT/MEKANO_REMOTO/INTERFACES/CONTABLE.txt")
+	txtFile, err := os.Create(filepath.Join(utils.MekanoInterfaceDirPath, "CONTABLE.txt"))
 	if err != nil {
 		fmt.Println(err)
 		return
@@ -103,31 +97,31 @@ func Payment(fileName string, db *gorm.DB) {
 	writer := csv.NewWriter(txtFile)
 	writer.Comma = ','
 
-	for i := range dataSheet.Tipo {
+	for i := range paymentDatasheet.Tipo {
 		row := []string{
-			dataSheet.Tipo[i],
-			dataSheet.Prefijo[i],
-			strconv.Itoa(dataSheet.Numero[i]),
-			dataSheet.Secuencia[i],
-			dataSheet.Fecha[i],
-			dataSheet.Cuenta[i],
-			dataSheet.Terceros[i],
-			dataSheet.CentroCostos[i],
-			dataSheet.Nota[i],
-			dataSheet.Debito[i],
-			dataSheet.Credito[i],
-			dataSheet.Base[i],
-			dataSheet.Aplica[i],
-			dataSheet.TipoAnexo[i],
-			dataSheet.PrefijoAnexo[i],
-			dataSheet.NumeroAnexo[i],
-			dataSheet.Usuario[i],
-			dataSheet.Signo[i],
-			dataSheet.CuentaCobrar[i],
-			dataSheet.CuentaPagar[i],
-			dataSheet.NombreTercero[i],
-			dataSheet.NombreCentro[i],
-			dataSheet.Interface[i],
+			paymentDatasheet.Tipo[i],
+			paymentDatasheet.Prefijo[i],
+			strconv.Itoa(paymentDatasheet.Numero[i]),
+			paymentDatasheet.Secuencia[i],
+			paymentDatasheet.Fecha[i],
+			paymentDatasheet.Cuenta[i],
+			paymentDatasheet.Terceros[i],
+			paymentDatasheet.CentroCostos[i],
+			paymentDatasheet.Nota[i],
+			paymentDatasheet.Debito[i],
+			paymentDatasheet.Credito[i],
+			paymentDatasheet.Base[i],
+			paymentDatasheet.Aplica[i],
+			paymentDatasheet.TipoAnexo[i],
+			paymentDatasheet.PrefijoAnexo[i],
+			paymentDatasheet.NumeroAnexo[i],
+			paymentDatasheet.Usuario[i],
+			paymentDatasheet.Signo[i],
+			paymentDatasheet.CuentaCobrar[i],
+			paymentDatasheet.CuentaPagar[i],
+			paymentDatasheet.NombreTercero[i],
+			paymentDatasheet.NombreCentro[i],
+			paymentDatasheet.Interface[i],
 		}
 		writer.Write(row)
 	}
