@@ -14,8 +14,8 @@ import (
 )
 
 func Payment(fileName string, db *gorm.DB) {
-	var rowCount, lastConsecutive int = 0, 0
-	paymentDatasheet := dataSheet{}
+	var paymentDataSlice []PaymentData
+	var rowCount, consecutive int = 0, 0
 
 	xlsx, err := excelize.OpenFile(filepath.Join(utils.LocalCloudDirPath, fileName+".xlsx"))
 	if err != nil {
@@ -33,59 +33,65 @@ func Payment(fileName string, db *gorm.DB) {
 
 	for _, row := range excelRows[1:] {
 		rowCount++
+		consecutive = currentConsecutive.Consecutive + rowCount
 
-		paymentDatasheet.Tipo = append(paymentDatasheet.Tipo, "RC")
-		paymentDatasheet.Prefijo = append(paymentDatasheet.Prefijo, "_")
-		paymentDatasheet.Numero = append(paymentDatasheet.Numero, currentConsecutive.Consecutive+rowCount) //
-		paymentDatasheet.Secuencia = append(paymentDatasheet.Secuencia, "")
-		paymentDatasheet.Fecha = append(paymentDatasheet.Fecha, row[4])
-		paymentDatasheet.Cuenta = append(paymentDatasheet.Cuenta, "13050501")
-		paymentDatasheet.Terceros = append(paymentDatasheet.Terceros, row[1])
-		paymentDatasheet.CentroCostos = append(paymentDatasheet.CentroCostos, "C1")
-		paymentDatasheet.Nota = append(paymentDatasheet.Nota, "RECAUDO POR VENTA SERVICIOS")
-		paymentDatasheet.Debito = append(paymentDatasheet.Debito, "0")
-		paymentDatasheet.Credito = append(paymentDatasheet.Credito, row[5])
-		paymentDatasheet.Base = append(paymentDatasheet.Base, "0")
-		paymentDatasheet.Aplica = append(paymentDatasheet.Aplica, "")
-		paymentDatasheet.TipoAnexo = append(paymentDatasheet.TipoAnexo, "")
-		paymentDatasheet.PrefijoAnexo = append(paymentDatasheet.PrefijoAnexo, "")
-		paymentDatasheet.NumeroAnexo = append(paymentDatasheet.NumeroAnexo, "")
-		paymentDatasheet.Usuario = append(paymentDatasheet.Usuario, "SUPERVISOR")
-		paymentDatasheet.Signo = append(paymentDatasheet.Signo, "")
-		paymentDatasheet.CuentaCobrar = append(paymentDatasheet.CuentaCobrar, "")
-		paymentDatasheet.CuentaPagar = append(paymentDatasheet.CuentaPagar, "")
-		paymentDatasheet.NombreTercero = append(paymentDatasheet.NombreTercero, row[2])
-		paymentDatasheet.NombreCentro = append(paymentDatasheet.NombreCentro, "CENTRO DE COSTOS GENERAL")
-		paymentDatasheet.Interface = append(paymentDatasheet.Interface, utils.CurrentTimeMekanoInterface)
+		paymentData := PaymentData{
+			Tipo:          "RC",
+			Prefijo:       "_",
+			Numero:        consecutive,
+			Secuencia:     "",
+			Fecha:         row[4],
+			Cuenta:        "13050501",
+			Terceros:      row[1],
+			CentroCostos:  "C1",
+			Nota:          "RECAUDO POR VENTA SERVICIOS",
+			Debito:        "0",
+			Credito:       row[5],
+			Base:          "0",
+			Aplica:        "",
+			TipoAnexo:     "",
+			PrefijoAnexo:  "",
+			NumeroAnexo:   "",
+			Usuario:       "SUPERVISOR",
+			Signo:         "",
+			CuentaCobrar:  "",
+			CuentaPagar:   "",
+			NombreTercero: row[2],
+			NombreCentro:  "CENTRO DE COSTOS GENERAL",
+			Interface:     utils.CurrentTimeMekanoInterface,
+		}
+		paymentDataSlice = append(paymentDataSlice, paymentData)
 
-		paymentDatasheet.Tipo = append(paymentDatasheet.Tipo, "RC")
-		paymentDatasheet.Prefijo = append(paymentDatasheet.Prefijo, "_")
-		paymentDatasheet.Numero = append(paymentDatasheet.Numero, currentConsecutive.Consecutive+rowCount)
-		paymentDatasheet.Secuencia = append(paymentDatasheet.Secuencia, "")
-		paymentDatasheet.Fecha = append(paymentDatasheet.Fecha, row[4])
-		paymentDatasheet.Cuenta = append(paymentDatasheet.Cuenta, utils.Caja[row[9]])
-		paymentDatasheet.Terceros = append(paymentDatasheet.Terceros, row[1])
-		paymentDatasheet.CentroCostos = append(paymentDatasheet.CentroCostos, "C1")
-		paymentDatasheet.Nota = append(paymentDatasheet.Nota, "RECAUDO POR VENTA SERVICIOS")
-		paymentDatasheet.Debito = append(paymentDatasheet.Debito, row[5])
-		paymentDatasheet.Credito = append(paymentDatasheet.Credito, "0")
-		paymentDatasheet.Base = append(paymentDatasheet.Base, "0")
-		paymentDatasheet.Aplica = append(paymentDatasheet.Aplica, "")
-		paymentDatasheet.TipoAnexo = append(paymentDatasheet.TipoAnexo, "")
-		paymentDatasheet.PrefijoAnexo = append(paymentDatasheet.PrefijoAnexo, "")
-		paymentDatasheet.NumeroAnexo = append(paymentDatasheet.NumeroAnexo, "")
-		paymentDatasheet.Usuario = append(paymentDatasheet.Usuario, "SUPERVISOR")
-		paymentDatasheet.Signo = append(paymentDatasheet.Signo, "")
-		paymentDatasheet.CuentaCobrar = append(paymentDatasheet.CuentaCobrar, "")
-		paymentDatasheet.CuentaPagar = append(paymentDatasheet.CuentaPagar, "")
-		paymentDatasheet.NombreTercero = append(paymentDatasheet.NombreTercero, row[2])
-		paymentDatasheet.NombreCentro = append(paymentDatasheet.NombreCentro, "CENTRO DE COSTOS GENERAL")
-		paymentDatasheet.Interface = append(paymentDatasheet.Interface, utils.CurrentTimeMekanoInterface)
-
-		lastConsecutive = currentConsecutive.Consecutive + rowCount
+		paymentData2 := PaymentData{
+			Tipo:          "RC",
+			Prefijo:       "_",
+			Numero:        consecutive,
+			Secuencia:     "",
+			Fecha:         row[4],
+			Cuenta:        utils.Caja[row[9]],
+			Terceros:      row[1],
+			CentroCostos:  "C1",
+			Nota:          "RECAUDO POR VENTA SERVICIOS",
+			Debito:        row[5],
+			Credito:       "0",
+			Base:          "0",
+			Aplica:        "",
+			TipoAnexo:     "",
+			PrefijoAnexo:  "",
+			NumeroAnexo:   "",
+			Usuario:       "SUPERVISOR",
+			Signo:         "",
+			CuentaCobrar:  "",
+			CuentaPagar:   "",
+			NombreTercero: row[2],
+			NombreCentro:  "CENTRO DE COSTOS GENERAL",
+			Interface:     utils.CurrentTimeMekanoInterface,
+		}
+		paymentDataSlice = append(paymentDataSlice, paymentData2)
 	}
 
-	db.Create(&database.MekanoPayments{Consecutive: lastConsecutive, CreateAt: utils.CurrentTimeToMySQL})
+	//Save in database last consecutive generated by iter excel rows
+	db.Create(&database.MekanoPayments{Consecutive: consecutive, CreateAt: utils.CurrentTimeToMySQL})
 
 	txtFile, err := os.Create(filepath.Join(utils.MekanoInterfaceDirPath, "CONTABLE.txt"))
 	if err != nil {
@@ -97,31 +103,31 @@ func Payment(fileName string, db *gorm.DB) {
 	writer := csv.NewWriter(txtFile)
 	writer.Comma = ','
 
-	for i := range paymentDatasheet.Tipo {
+	for _, data := range paymentDataSlice {
 		row := []string{
-			paymentDatasheet.Tipo[i],
-			paymentDatasheet.Prefijo[i],
-			strconv.Itoa(paymentDatasheet.Numero[i]),
-			paymentDatasheet.Secuencia[i],
-			paymentDatasheet.Fecha[i],
-			paymentDatasheet.Cuenta[i],
-			paymentDatasheet.Terceros[i],
-			paymentDatasheet.CentroCostos[i],
-			paymentDatasheet.Nota[i],
-			paymentDatasheet.Debito[i],
-			paymentDatasheet.Credito[i],
-			paymentDatasheet.Base[i],
-			paymentDatasheet.Aplica[i],
-			paymentDatasheet.TipoAnexo[i],
-			paymentDatasheet.PrefijoAnexo[i],
-			paymentDatasheet.NumeroAnexo[i],
-			paymentDatasheet.Usuario[i],
-			paymentDatasheet.Signo[i],
-			paymentDatasheet.CuentaCobrar[i],
-			paymentDatasheet.CuentaPagar[i],
-			paymentDatasheet.NombreTercero[i],
-			paymentDatasheet.NombreCentro[i],
-			paymentDatasheet.Interface[i],
+			data.Tipo,
+			data.Prefijo,
+			strconv.Itoa(data.Numero),
+			data.Secuencia,
+			data.Fecha,
+			data.Cuenta,
+			data.Terceros,
+			data.CentroCostos,
+			data.Nota,
+			data.Debito,
+			data.Credito,
+			data.Base,
+			data.Aplica,
+			data.TipoAnexo,
+			data.PrefijoAnexo,
+			data.NumeroAnexo,
+			data.Usuario,
+			data.Signo,
+			data.CuentaCobrar,
+			data.CuentaPagar,
+			data.NombreTercero,
+			data.NombreCentro,
+			data.Interface,
 		}
 		writer.Write(row)
 	}
