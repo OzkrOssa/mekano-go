@@ -14,7 +14,8 @@ func main() {
 	if err != nil {
 		panic(err)
 	}
-	mekano.Payment("PAGOS 18-21 FEBRERO 2023 PARA MEKANO", db)
+	//mekano.Payment("PAGOS 18-21 FEBRERO 2023 PARA MEKANO", db)
+	mekano.Billing("REPORTE FACTURACION ELECTRONICA FEBRERO 2023", db)
 	since := time.Since(start)
 
 	fmt.Println(since)

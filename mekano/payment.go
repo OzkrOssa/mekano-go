@@ -14,10 +14,10 @@ import (
 )
 
 func Payment(fileName string, db *gorm.DB) {
-	var paymentDataSlice []PaymentData
+	var paymentDataSlice []MekanoDataSheet
 	var rowCount, consecutive int = 0, 0
 
-	xlsx, err := excelize.OpenFile(filepath.Join(utils.LocalCloudDirPath, fileName+".xlsx"))
+	xlsx, err := excelize.OpenFile(filepath.Join(utils.PaymentFileDirPath, fileName+".xlsx"))
 	if err != nil {
 		fmt.Println(err)
 		return
@@ -35,10 +35,10 @@ func Payment(fileName string, db *gorm.DB) {
 		rowCount++
 		consecutive = currentConsecutive.Consecutive + rowCount
 
-		paymentData := PaymentData{
+		paymentData := MekanoDataSheet{
 			Tipo:          "RC",
 			Prefijo:       "_",
-			Numero:        consecutive,
+			Numero:        strconv.Itoa(consecutive),
 			Secuencia:     "",
 			Fecha:         row[4],
 			Cuenta:        "13050501",
@@ -62,10 +62,10 @@ func Payment(fileName string, db *gorm.DB) {
 		}
 		paymentDataSlice = append(paymentDataSlice, paymentData)
 
-		paymentData2 := PaymentData{
+		paymentData2 := MekanoDataSheet{
 			Tipo:          "RC",
 			Prefijo:       "_",
-			Numero:        consecutive,
+			Numero:        strconv.Itoa(consecutive),
 			Secuencia:     "",
 			Fecha:         row[4],
 			Cuenta:        utils.Caja[row[9]],
@@ -107,7 +107,7 @@ func Payment(fileName string, db *gorm.DB) {
 		row := []string{
 			data.Tipo,
 			data.Prefijo,
-			strconv.Itoa(data.Numero),
+			data.Numero,
 			data.Secuencia,
 			data.Fecha,
 			data.Cuenta,

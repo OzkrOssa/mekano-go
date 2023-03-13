@@ -1,9 +1,15 @@
 package mekano
 
-type PaymentData struct {
+import (
+	"path/filepath"
+
+	"github.com/xuri/excelize/v2"
+)
+
+type MekanoDataSheet struct {
 	Tipo          string
 	Prefijo       string
-	Numero        int
+	Numero        string
 	Secuencia     string
 	Fecha         string
 	Cuenta        string
@@ -34,4 +40,18 @@ type statistics struct {
 	PayU        string `json:"payu"`
 	Efectivo    string `json:"efectivo"`
 	Total       string `json:"total"`
+}
+
+func xlsxData(filePath string, fileName string) ([][]string, error) {
+	xlsx, err := excelize.OpenFile(filepath.Join(filePath, fileName+".xlsx"))
+	if err != nil {
+		return nil, err
+	}
+
+	excelRows, err := xlsx.GetRows(xlsx.GetSheetName(0))
+	if err != nil {
+		return nil, err
+	}
+
+	return excelRows, nil
 }
