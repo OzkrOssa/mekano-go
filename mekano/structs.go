@@ -32,14 +32,19 @@ type MekanoDataSheet struct {
 	Interface     string
 }
 
-type statistics struct {
+type paymentStatistics struct {
 	RangoRC     string `json:"rango-rc"`
-	Bancolombia string `json:"bancolombia"`
-	Davivienda  string `json:"davivienda"`
-	Susuerte    string `json:"susuerte"`
-	PayU        string `json:"payu"`
-	Efectivo    string `json:"efectivo"`
-	Total       string `json:"total"`
+	Bancolombia int    `json:"bancolombia"`
+	Davivienda  int    `json:"davivienda"`
+	Susuerte    int    `json:"susuerte"`
+	PayU        int    `json:"payu"`
+	Efectivo    int    `json:"efectivo"`
+	Total       int    `json:"total"`
+}
+type billingStatistics struct {
+	Debito  float64 `json:"debito"`
+	Credito float64 `json:"credito"`
+	Base    float64 `json:"base"`
 }
 
 func xlsxData(filePath string, fileName string) ([][]string, error) {
