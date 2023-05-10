@@ -3,6 +3,7 @@ package mekano
 import (
 	"encoding/csv"
 	"fmt"
+	"log"
 	"math"
 	"os"
 	"path/filepath"
@@ -11,21 +12,20 @@ import (
 
 	"github.com/OzkrOssa/mekano-go/utils"
 	"github.com/mozillazg/go-unidecode"
-	"gorm.io/gorm"
 )
 
-func Billing(fileName string, db *gorm.DB) {
+func Billing(fileName string) {
 	billingFile, err := xlsxData(utils.BillingFileDirPath, fileName)
 	var montoBaseFinal float64
 	if err != nil {
-		fmt.Println(err)
+		log.Println(err, "billingFile")
 	}
-	itemsIvaFile, err := xlsxData("./", "items_iva")
+	itemsIvaFile, err := xlsxData("C:/Users/devre/OneDrive/facturacion_mekano", "extras")
 
 	var BillingDataSheet []MekanoDataSheet
 
 	if err != nil {
-		fmt.Println(err)
+		log.Println(err, "itemsIvaFile")
 	}
 
 	for _, bRow := range billingFile[1:] {
@@ -33,12 +33,12 @@ func Billing(fileName string, db *gorm.DB) {
 		montoBase, err := strconv.ParseFloat(bRow[12], 64)
 
 		if err != nil {
-			fmt.Println(err)
+			log.Println(err, "MontoBase")
 		}
 
 		montoIva, err := strconv.ParseFloat(strings.TrimSpace(bRow[13]), 64)
 		if err != nil {
-			fmt.Println(err)
+			log.Println(err, "MontoIva")
 		}
 
 		_, decimal := math.Modf(montoBase)
@@ -89,7 +89,7 @@ func Billing(fileName string, db *gorm.DB) {
 				CentroCostos:  utils.CentroCostos[unidecode.Unidecode(bRow[17])],
 				Nota:          "FACTURA ELECTRÓNICA DE VENTA",
 				Debito:        "0",
-				Credito:       fmt.Sprintf("%f", math.Ceil(montoIva)),
+				Credito:       fmt.Sprintf("%f", montoIva),
 				Base:          fmt.Sprintf("%f", montoBaseFinal),
 				Aplica:        "",
 				TipoAnexo:     "",
@@ -137,7 +137,7 @@ func Billing(fileName string, db *gorm.DB) {
 			splitBillingItems := strings.Split(bRow[21], ",")
 			for _, item := range splitBillingItems {
 				for _, itemIva := range itemsIvaFile[1:] {
-					if itemIva[1] == unidecode.Unidecode(strings.TrimSpace(item)) && itemIva[0] == bRow[0] {
+					if itemIva[1] == strings.TrimSpace(item) && itemIva[0] == bRow[0] {
 						itemIvaBase, _ := strconv.ParseFloat(itemIva[2], 64)
 						billingNormalPlus := MekanoDataSheet{
 							Tipo:          "FVE",
@@ -150,7 +150,7 @@ func Billing(fileName string, db *gorm.DB) {
 							CentroCostos:  utils.CentroCostos[unidecode.Unidecode(bRow[17])],
 							Nota:          "FACTURA ELECTRÓNICA DE VENTA",
 							Debito:        "0",
-							Credito:       fmt.Sprintf("%f", math.Ceil(itemIvaBase)),
+							Credito:       fmt.Sprintf("%f", math.Ceil(itemIvaBase-1)),
 							Base:          "0",
 							Aplica:        "",
 							TipoAnexo:     "",
@@ -179,7 +179,7 @@ func Billing(fileName string, db *gorm.DB) {
 				CentroCostos:  utils.CentroCostos[unidecode.Unidecode(bRow[17])],
 				Nota:          "FACTURA ELECTRÓNICA DE VENTA",
 				Debito:        "0",
-				Credito:       fmt.Sprintf("%f", math.Ceil(montoIva)),
+				Credito:       fmt.Sprintf("%f", montoIva),
 				Base:          fmt.Sprintf("%f", montoBaseFinal),
 				Aplica:        "",
 				TipoAnexo:     "",
@@ -231,10 +231,17 @@ func Billing(fileName string, db *gorm.DB) {
 		fmt.Println(err)
 		return
 	}
+	csvFile, err := os.Create(filepath.Join(utils.MekanoInterfaceDirPath, "CONTABLE.csv"))
+	if err != nil {
+		fmt.Println(err)
+		return
+	}
 	defer txtFile.Close()
 
 	writer := csv.NewWriter(txtFile)
+	w := csv.NewWriter(csvFile)
 	writer.Comma = ','
+	w.Comma = ','
 
 	for _, data := range BillingDataSheet {
 		row := []string{
@@ -263,6 +270,9 @@ func Billing(fileName string, db *gorm.DB) {
 			data.Interface,
 		}
 		writer.Write(row)
+		w.Write(row)
 	}
 	writer.Flush()
+	w.Flush()
+	BillingStatistics(BillingDataSheet)
 }
