@@ -23,7 +23,7 @@ func Payment(fileName string, db *gorm.DB) {
 		return
 	}
 
-	excelRows, err := xlsx.GetRows("hoja1")
+	excelRows, err := xlsx.GetRows(xlsx.GetSheetName(0))
 	if err != nil {
 		fmt.Println(err)
 	}
@@ -132,4 +132,6 @@ func Payment(fileName string, db *gorm.DB) {
 		writer.Write(row)
 	}
 	writer.Flush()
+
+	PaymentStatistics(paymentDataSlice, currentConsecutive.Consecutive, consecutive)
 }
