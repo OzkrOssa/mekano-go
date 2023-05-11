@@ -17,6 +17,9 @@ import (
 func Billing(fileName string) {
 	billingFile, err := xlsxData(utils.BillingFileDirPath, fileName)
 	var montoBaseFinal float64
+	var montoIvaFinal float64
+	var montoDebitoFinal float64
+	var itemIvaBaseFinal float64
 	if err != nil {
 		log.Println(err, "billingFile")
 	}
@@ -30,23 +33,38 @@ func Billing(fileName string) {
 
 	for _, bRow := range billingFile[1:] {
 
-		montoBase, err := strconv.ParseFloat(bRow[12], 64)
-
+		montoDebito, err := strconv.ParseFloat(bRow[14], 64)
 		if err != nil {
 			log.Println(err, "MontoBase")
+		}
+		_, decimalDebito := math.Modf(montoDebito)
+		if decimalDebito >= 0.5 {
+			montoDebitoFinal = math.Ceil(montoDebito)
+		} else {
+			montoDebitoFinal = math.Round(montoDebito)
+		}
+
+		montoBase, err := strconv.ParseFloat(bRow[12], 64)
+		if err != nil {
+			log.Println(err, "MontoBase")
+		}
+		_, decimalBase := math.Modf(montoBase)
+		if decimalBase >= 0.5 {
+			montoBaseFinal = math.Ceil(montoBase)
+		} else {
+			montoBaseFinal = math.Round(montoBase)
 		}
 
 		montoIva, err := strconv.ParseFloat(strings.TrimSpace(bRow[13]), 64)
 		if err != nil {
 			log.Println(err, "MontoIva")
 		}
+		_, decimalIva := math.Modf(montoIva)
 
-		_, decimal := math.Modf(montoBase)
-
-		if decimal >= 0.5 {
-			montoBaseFinal = math.Ceil(montoBase)
+		if decimalIva >= 0.5 {
+			montoIvaFinal = math.Ceil(montoIva)
 		} else {
-			montoBaseFinal = math.Round(montoBase)
+			montoIvaFinal = math.Round(montoIva)
 		}
 
 		if !strings.Contains(bRow[21], ",") {
@@ -61,7 +79,7 @@ func Billing(fileName string) {
 				CentroCostos:  utils.CentroCostos[unidecode.Unidecode(bRow[17])],
 				Nota:          "FACTURA ELECTRÓNICA DE VENTA",
 				Debito:        "0",
-				Credito:       fmt.Sprintf("%f", math.Ceil(montoBase)),
+				Credito:       fmt.Sprintf("%f", montoBaseFinal),
 				Base:          "0",
 				Aplica:        "",
 				TipoAnexo:     "",
@@ -89,7 +107,7 @@ func Billing(fileName string) {
 				CentroCostos:  utils.CentroCostos[unidecode.Unidecode(bRow[17])],
 				Nota:          "FACTURA ELECTRÓNICA DE VENTA",
 				Debito:        "0",
-				Credito:       fmt.Sprintf("%f", montoIva),
+				Credito:       fmt.Sprintf("%f", montoIvaFinal),
 				Base:          fmt.Sprintf("%f", montoBaseFinal),
 				Aplica:        "",
 				TipoAnexo:     "",
@@ -116,7 +134,7 @@ func Billing(fileName string) {
 				Terceros:      bRow[1],
 				CentroCostos:  utils.CentroCostos[unidecode.Unidecode(bRow[17])],
 				Nota:          "FACTURA ELECTRÓNICA DE VENTA",
-				Debito:        bRow[14],
+				Debito:        fmt.Sprintf("%f", montoDebitoFinal),
 				Credito:       "0",
 				Base:          "0",
 				Aplica:        "",
@@ -139,6 +157,16 @@ func Billing(fileName string) {
 				for _, itemIva := range itemsIvaFile[1:] {
 					if itemIva[1] == strings.TrimSpace(item) && itemIva[0] == bRow[0] {
 						itemIvaBase, _ := strconv.ParseFloat(itemIva[2], 64)
+						_, decimalIvaBase := math.Modf(itemIvaBase)
+
+						if decimalIvaBase >= 0.5 {
+							itemIvaBaseFinal = math.Ceil(itemIvaBase)
+						} else {
+							itemIvaBaseFinal = math.Round(itemIvaBase)
+						}
+
+						fmt.Println(itemIvaBaseFinal)
+
 						billingNormalPlus := MekanoDataSheet{
 							Tipo:          "FVE",
 							Prefijo:       "_",
@@ -150,7 +178,7 @@ func Billing(fileName string) {
 							CentroCostos:  utils.CentroCostos[unidecode.Unidecode(bRow[17])],
 							Nota:          "FACTURA ELECTRÓNICA DE VENTA",
 							Debito:        "0",
-							Credito:       fmt.Sprintf("%f", math.Ceil(itemIvaBase-1)),
+							Credito:       fmt.Sprintf("%f", itemIvaBaseFinal),
 							Base:          "0",
 							Aplica:        "",
 							TipoAnexo:     "",
@@ -179,7 +207,7 @@ func Billing(fileName string) {
 				CentroCostos:  utils.CentroCostos[unidecode.Unidecode(bRow[17])],
 				Nota:          "FACTURA ELECTRÓNICA DE VENTA",
 				Debito:        "0",
-				Credito:       fmt.Sprintf("%f", montoIva),
+				Credito:       fmt.Sprintf("%f", montoIvaFinal),
 				Base:          fmt.Sprintf("%f", montoBaseFinal),
 				Aplica:        "",
 				TipoAnexo:     "",
@@ -206,7 +234,7 @@ func Billing(fileName string) {
 				Terceros:      bRow[1],
 				CentroCostos:  utils.CentroCostos[unidecode.Unidecode(bRow[17])],
 				Nota:          "FACTURA ELECTRÓNICA DE VENTA",
-				Debito:        bRow[14],
+				Debito:        fmt.Sprintf("%f", montoDebitoFinal),
 				Credito:       "0",
 				Base:          "0",
 				Aplica:        "",
